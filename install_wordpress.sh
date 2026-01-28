@@ -65,69 +65,78 @@ install_wordpress() {
 }
 
 install_extras() {
-    echo "Installing WooCommerce plugin and Storefront theme..."
-    
-    # Download and install WooCommerce
-    echo "Downloading WooCommerce..."
-    curl -s -L "https://downloads.wordpress.org/plugin/woocommerce.zip" -o /tmp/woocommerce.zip
-    unzip -q /tmp/woocommerce.zip -d "$SITE_PATH/wp-content/plugins/"
-    rm /tmp/woocommerce.zip
-
-    # Download and install Storefront theme
-    echo "Downloading Storefront theme..."
-    curl -s -L "https://downloads.wordpress.org/theme/storefront.zip" -o /tmp/storefront.zip
-    unzip -q /tmp/storefront.zip -d "$SITE_PATH/wp-content/themes/"
-    rm /tmp/storefront.zip
-
-    # Download and install WP Swiper
-    echo "Downloading WP Swiper..."
-    curl -s -L "https://downloads.wordpress.org/plugin/wp-swiper.zip" -o /tmp/wp-swiper.zip
-    unzip -q /tmp/wp-swiper.zip -d "$SITE_PATH/wp-content/plugins/"
-    rm /tmp/wp-swiper.zip
-
-    # Download and install ImageMagic Engine
-    echo "Downloading ImageMagic Engine..."
-    curl -s -L "https://downloads.wordpress.org/plugin/imagemagick-engine.zip" -o /tmp/imagemagick-engine.zip
-    unzip -q /tmp/imagemagick-engine.zip -d "$SITE_PATH/wp-content/plugins/"
-    rm /tmp/imagemagick-engine.zip
+    echo "Installing Plugins..."
     
     # Download and install Coblocks
     echo "Downloading Coblocks..."
-    curl -s -L "https://downloads.wordpress.org/plugin/coblocks.zip" -o /tmp/coblocks.zip
+    curl -s -L "https://downloads.wordpress.org/plugin/coblocks.latest-stable.zip?nostats=1" -o /tmp/coblocks.zip
     unzip -q /tmp/coblocks.zip -d "$SITE_PATH/wp-content/plugins/"
     rm /tmp/coblocks.zip
 
-    # Download and install Redis Cache
-    echo "Downloading Redis Cache..."
-    curl -s -L "https://downloads.wordpress.org/plugin/redis-cache.zip" -o /tmp/redis-cache.zip
-    unzip -q /tmp/redis-cache.zip -d "$SITE_PATH/wp-content/themes/"
-    rm /tmp/redis-cache.zip
+    # Download and install ImageMagic Engine
+    echo "Downloading ImageMagic Engine..."
+    curl -s -L "https://downloads.wordpress.org/plugin/imagemagick-engine.latest-stable.zip?nostats=1" -o /tmp/imagemagick-engine.zip
+    unzip -q /tmp/imagemagick-engine.zip -d "$SITE_PATH/wp-content/plugins/"
+    rm /tmp/imagemagick-engine.zip
 
     # Download and install Nginx Helper
     echo "Downloading Nginx Helper..."
-    curl -s -L "https://downloads.wordpress.org/plugin/nginx-helper.zip" -o /tmp/nginx-helper.zip
-    unzip -q /tmp/nginx-helper.zip -d "$SITE_PATH/wp-content/themes/"
+    curl -s -L "https://downloads.wordpress.org/plugin/nginx-helper.latest-stable.zip?nostats=1" -o /tmp/nginx-helper.zip
+    unzip -q /tmp/nginx-helper.zip -d "$SITE_PATH/wp-content/plugins/"
     rm /tmp/nginx-helper.zip
 
+    # Download and install Redis Cache
+    echo "Downloading Redis Cache..."
+    curl -s -L "https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip?nostats=1" -o /tmp/redis-cache.zip
+    unzip -q /tmp/redis-cache.zip -d "$SITE_PATH/wp-content/plugins/"
+    rm /tmp/redis-cache.zip
+
+    # Download and install WooCommerce
+    echo "Downloading WooCommerce..."
+    curl -s -L "https://downloads.wordpress.org/plugin/woocommerce.latest-stable.zip?nostats=1" -o /tmp/woocommerce.zip
+    unzip -q /tmp/woocommerce.zip -d "$SITE_PATH/wp-content/plugins/"
+    rm /tmp/woocommerce.zip
+
+    # Download and install WP Swiper
+    echo "Downloading WP Swiper..."
+    curl -s -L "https://downloads.wordpress.org/plugin/wp-swiper.latest-stable.zip?nostats=1" -o /tmp/wp-swiper.zip
+    unzip -q /tmp/wp-swiper.zip -d "$SITE_PATH/wp-content/plugins/"
+    rm /tmp/wp-swiper.zip
+
     echo "Extras installed successfully!"
+
+    # Delete Hello Dolly Plugin
+    echo "Deleting Hello Dolly Plugin..."
+    rm $SITE_PATH/wp-content/plugins/hello.php
 }
 
 create_database() {
-    DB_PASS=$(openssl rand -base64 27 | tr -dc 'A-Za-z0-9')
+    RANDOM1=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')
+    RANDOM2=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9')
+    DB_PASS="$RANDOM1-$RANDOM2"
 
     echo "Creating database: $DB_NAME"
 
     # Determine MySQL authentication method
     setup_mysql_auth
 
-    $MYSQL_CMD <<EOF
+    SQL=$(cat <<SQL
 CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';
 GRANT ALL PRIVILEGES ON \`$DB_NAME\`.* TO '$DB_USER'@'localhost';
 FLUSH PRIVILEGES;
-EOF
+SQL
+)
+    
+    echo "Executing SQL commands..."
+    echo "$SQL" | $MYSQL_CMD
 
-    echo "Database created successfully!"
+    if [ $? -eq 0 ]; then
+        echo "Database created successfully!"
+    else
+        echo "Error creating database!"
+        exit 1
+    fi
 }
 
 delete_database() {
@@ -188,14 +197,6 @@ show_summary() {
     echo "Database: $DB_NAME"
     echo "Username: $DB_USER"
     echo "Password: $DB_PASS"
-    
-    if [[ "$EXTRAS" == true ]]; then
-        echo ""
-        echo "Pre-installed:"
-        echo "  • WooCommerce plugin"
-        echo "  • Storefront theme"
-    fi
-    
     echo ""
 }
 
