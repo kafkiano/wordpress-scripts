@@ -180,6 +180,11 @@ configure_wordpress() {
     ' "$SITE_PATH/wp-config.php" > "$SITE_PATH/wp-config.tmp" && \
     mv "$SITE_PATH/wp-config.tmp" "$SITE_PATH/wp-config.php"
     
+    # Insert Nginx Helper cache path definition if extras are enabled
+    if [[ "$EXTRAS" == true ]]; then
+        sed -i "/\/\* Add any custom values between this line and the \"stop editing\" line\. \*\//a define('RT_WP_NGINX_HELPER_CACHE_PATH', '$SITE_PATH/cache/');" "$SITE_PATH/wp-config.php"
+    fi
+    
     echo "WordPress configuration completed!"
 }
 
