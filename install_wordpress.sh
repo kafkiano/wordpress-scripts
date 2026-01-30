@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# WordPress site manager
 # Usage: 
 #   Install: sudo ./install-wordpress.sh site_directory [--extras]
 #   Delete:  sudo ./install-wordpress.sh site_directory --delete
